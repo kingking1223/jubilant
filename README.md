@@ -1,0 +1,2 @@
+# jubilant
+ChatGPT wrapper
