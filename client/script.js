@@ -6,6 +6,8 @@ const chatContainer = document.querySelector('#chat_container')
 
 let loadInterval;
 let isShifting;
+let isCtrling;
+let isFast = true;
 
 function loader(el) {
     el.textContent = ''
@@ -19,7 +21,7 @@ function loader(el) {
     }, 300)
 }
 
-function typeText(el, txt) {
+function typeText(el, txt, i) {
     let index = 0;
 
     let interval = setInterval(() => {
@@ -27,7 +29,7 @@ function typeText(el, txt) {
             el.innerHTML += txt.charAt(index)
             index++
         } else clearInterval(interval)
-    }, 20)
+    }, i)
 }
 
 function genUId() {
@@ -44,10 +46,7 @@ function chatStripe(isAi, value, uid) {
             <div class="wrapper ${isAi && 'ai'}">
                 <div class="chat">
                     <div class="profile">
-                        <img 
-                            src="${isAi ? bot : user}"
-                            alt="${isAi ? bot : user}"
-                        />
+                        <p>${isAi ? '>' : '!'}</p>
                     </div>
                     <div class="message" id=${uid}>${value}</div>
                 </div>
@@ -80,7 +79,7 @@ const handleSubmit = async (e) => {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            prompt: data.get('prompt')
+        prompt: data.get('prompt')
         })
     })
 
@@ -90,8 +89,8 @@ const handleSubmit = async (e) => {
     if (response.ok) {
         const data = await response.json()
         const parsedData = data.bot.trim()
-
-        typeText(messageDiv, parsedData)
+        
+        isFast ? typeText(messageDiv, parsedData, 0) : typeText(messageDiv, parsedData, 20)
     } else {
         const error = await response.text()
 
@@ -101,14 +100,42 @@ const handleSubmit = async (e) => {
 }
 
 form.addEventListener('keydown', (e) => {
-    if (e.keyCode === 16) isShifting = true
+    if (e.keyCode === 16) {
+        isShifting = true
+        console.log(`shift: ${isShifting}`)
+    }
 })
 
 form.addEventListener('keyup', (e) => {
-    if (e.keyCode === 16) isShifting = false
+    if (e.keyCode === 16) {
+        isShifting = false
+        console.log(`shift: ${isShifting}`)
+    }
+})
+
+form.addEventListener('keydown', (e) => {
+    if (e.keyCode === 17) {
+        isCtrling = true
+        console.log(`ctrl: ${isCtrling}`)
+    }
+})
+
+form.addEventListener('keyup', (e) => {
+    if (e.keyCode === 17) {
+        isCtrling = false
+        console.log(`ctrl: ${isCtrling}`)
+    }
 })
 
 form.addEventListener('submit', handleSubmit)
 form.addEventListener('keyup', (e) => {
     if (e.keyCode === 13 && !isShifting) handleSubmit(e)
+})
+
+form.addEventListener('keydown', (e) => {
+    if (e.keyCode === 188 && isCtrling) isFast = true
+})
+
+form.addEventListener('keydown', (e) => {
+    if (e.keyCode === 190 && isCtrling) isFast = false
 })
